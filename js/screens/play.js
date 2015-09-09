@@ -48,6 +48,28 @@ game.PlayScreen = me.ScreenObject.extend({
 		console.log(sortX);
 		console.log(sortY);
 
+		var sortXPoints = [];
+		var sortYPoints = [];
+
+		for (var i = 0; i < sortX.length; i++) {
+			for (var j = 0; j < VectorArray.length; j++) {
+				if(sortX[i] == VectorArray[j].x){
+					sortXPoints[i] = VectorArray[j];			
+				}
+			};
+		};
+
+		for (var i = 0; i < sortY.length; i++) {
+			for (var j = 0; j < VectorArray.length; j++) {
+				if(sortY[i] == VectorArray[j].y){
+					sortYPoints[i] = VectorArray[j];			
+				}
+			};
+		};
+
+		console.log(sortXPoints);
+		console.log(sortYPoints);
+
 		// Now I need to figure out which point belongs to which and assign the correct screen limits to them.
 
 		//this.DrawLineAndFormula(Vector3, Vector1);
