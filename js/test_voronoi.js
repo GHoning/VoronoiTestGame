@@ -31,10 +31,6 @@ class Line {
     return (y -this.b) / this.m;
   }
 
-  flip() {
-
-  }
-
   //get the crossing point if available.
   getCrossOver() {
 
@@ -73,12 +69,12 @@ for (var point in points) {
 }
 
 //draw the line.
-ctx.beginPath();
-ctx.moveTo(points[0].x, points[0].y);
-ctx.strokeStyle = 'blue';
-ctx.lineWidth = 3;
-ctx.lineTo(points[1].x, points[1].y);
-ctx.stroke();
+// ctx.beginPath();
+// ctx.moveTo(points[0].x, points[0].y);
+// ctx.strokeStyle = 'blue';
+// ctx.lineWidth = 3;
+// ctx.lineTo(points[1].x, points[1].y);
+// ctx.stroke();
 
 //TODO work on a way to find the middle of this base line.
 
@@ -94,4 +90,18 @@ ctx.lineWidth = 3;
 ctx.lineTo(600, currentLine.getY(600));
 ctx.stroke();
 
-//draw a line perpendicular to the previous line.
+//draw a line perpendicular to the previous line. In the middle of the previous one.
+//Calculate that.
+var halfwayPoint = new Point(((points[1].x - points[0].x) / 2) + points[0].x , ((points[1].y - points[0].y) / 2) + points[0].y);
+halfwayPoint.draw(ctx);
+
+
+//The ratio is filped. Instead of moving y per 1x. Make it x per 1y.
+var nextLine = new Line(currentLine.m * -1 , currentLine.b * -1);
+
+ctx.beginPath();
+ctx.moveTo(0, nextLine.getY(0));
+ctx.strokeStyle = 'blue';
+ctx.lineWidth = 3;
+ctx.lineTo(600, nextLine.getY(600));
+ctx.stroke();
