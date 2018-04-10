@@ -31,11 +31,30 @@ class Line {
     return (y -this.b) / this.m;
   }
 
-  //get the crossing point if available.
-  getCrossOver() {
-
+  draw(ctx, from_x, to_x, color) {
+    ctx.beginPath();
+    ctx.moveTo(from_x, this.getY(from_x));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.lineTo(to_x, this.getY(to_x));
+    ctx.stroke();
   }
+}
 
+function flipLine(line, point) {
+  // M is the amount of y differences on 1 x.
+  // 1 | new M   3  9
+  // M | 1       4  12
+  var mm = 1 / line.m;
+  mm = mm * -1;
+
+  //now to Calculate the required b
+  // y = mm * x + bb;
+  // bb = y - (mm * x)
+  var bb = 0;
+  bb = point.y - (mm * point.x);
+
+  return new Line(mm, bb);
 }
 
 function getLine(p1, p2) {
@@ -68,40 +87,19 @@ for (var point in points) {
   points[point].draw(ctx);
 }
 
-//draw the line.
-// ctx.beginPath();
-// ctx.moveTo(points[0].x, points[0].y);
-// ctx.strokeStyle = 'blue';
-// ctx.lineWidth = 3;
-// ctx.lineTo(points[1].x, points[1].y);
-// ctx.stroke();
-
-//TODO work on a way to find the middle of this base line.
-
 //to draw a line perpendicular to previous one we need a bit of algebra.
 //How do I define this line in a function.
 //It is always someting like this. sx + z = y;
 var currentLine = getLine(points[0], points[1]);
-
-ctx.beginPath();
-ctx.moveTo(0, currentLine.getY(0));
-ctx.strokeStyle = 'red';
-ctx.lineWidth = 3;
-ctx.lineTo(600, currentLine.getY(600));
-ctx.stroke();
+currentLine.draw(ctx, points[0].x, points[1].x, "grey");
 
 //draw a line perpendicular to the previous line. In the middle of the previous one.
 //Calculate that.
 var halfwayPoint = new Point(((points[1].x - points[0].x) / 2) + points[0].x , ((points[1].y - points[0].y) / 2) + points[0].y);
-halfwayPoint.draw(ctx);
+// halfwayPoint.draw(ctx);
 
+//This is now the border.:)
+var nextLine = flipLine(currentLine, halfwayPoint);
+nextLine.draw(ctx, 0, canvas_width, "red");
 
-//The ratio is filped. Instead of moving y per 1x. Make it x per 1y.
-var nextLine = new Line(currentLine.m * -1 , currentLine.b * -1);
-
-ctx.beginPath();
-ctx.moveTo(0, nextLine.getY(0));
-ctx.strokeStyle = 'blue';
-ctx.lineWidth = 3;
-ctx.lineTo(600, nextLine.getY(600));
-ctx.stroke();
+//This all does some weird stuff when either of the differences between the points is zero. :P
