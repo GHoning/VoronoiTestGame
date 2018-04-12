@@ -5,69 +5,112 @@ class Point {
     this.y = y;
   }
 
-  draw(ctx) {
+  draw(ctx, color) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, 6, 0, 2 * Math.PI, true);
+    ctx.fillStyle = color;
     ctx.fill();
   }
 }
 
-//The line defined as a function.
+// Line drawable.
 class Line {
-  //what are the things we are looking for.
-  // 500 + (x * 5) = y
-  // y = mx + b;
-
-  constructor(m, b) {
-    this.m = m;
-    this.b = b;
+  constructor(start_point, end_point) {
+    this.start_point = start_point;
+    this.end_point = end_point;
   }
 
-  getY(x) {
-    return (this.m * x) + this.b;
-  }
-
-  getX(y) {
-    return (y -this.b) / this.m;
-  }
-
-  draw(ctx, from_x, to_x, color) {
+  draw(ctx, color) {
     ctx.beginPath();
-    ctx.moveTo(from_x, this.getY(from_x));
+    ctx.moveTo(this.start_point.x, this.start_point.y);
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
-    ctx.lineTo(to_x, this.getY(to_x));
+    ctx.lineTo(this.end_point.x, this.end_point.y);
     ctx.stroke();
   }
 }
 
-function flipLine(line, point) {
-  // M is the amount of y differences on 1 x.
-  // 1 | new M   3  9
-  // M | 1       4  12
-  var mm = 1 / line.m;
-  mm = mm * -1;
+//The line defined as a function.
+class LineFormula {
+  //what are the things we are looking for.
+  // 500 + (x * 5) = y
+  // y = mx + b;
+  constructor(ratio, offset, horizontal, vertical) {
+    this.ratio = ratio;
+    this.offset = offset;
+    this.horizontal = horizontal;
+    this.vertical = vertical;
+  }
 
-  //now to Calculate the required b
-  // y = mm * x + bb;
-  // bb = y - (mm * x)
-  var bb = 0;
-  bb = point.y - (mm * point.x);
+  getX(y) {
+    return (y - this.offset) / this.ratio;
+  }
 
-  return new Line(mm, bb);
+  getY(x) {
+    return (this.ratio * x) + this.offset;
+  }
 }
 
-function getLine(p1, p2) {
+//Function to create line formula's. Maybe merge this with the line as well as the drawable Line.
+function getLineFormula(p1, p2) {
   // The m is the change per step.
   // Divide the differences.
   var difX = p1.x - p2.x;
   var difY = p1.y - p2.y;
-  var m = difY / difX;
 
-  var tempLine = new Line(m, 0);
-  var b = p1.y - tempLine.getY(p1.x);
+  console.log("difx = " + difX);
+  console.log("dify = " + difY);
 
-  return new Line(m, b);
+  var ratio = difY / difX;
+
+  if (difX == 0) {
+    ratio = 0;
+    //Vertical = true;
+  }
+
+  if (difY == 0) {
+    ratio = 0;
+    //Horizontal = true;
+  }
+
+  console.log("ratio = " + ratio);
+
+  var tempLine = new LineFormula(ratio, 0);
+  var offset = p1.y - tempLine.getY(p1.x);
+
+  console.log("offset = "+ offset);
+
+  return new LineFormula(ratio, offset);
+}
+
+function flipLine(LineForumla, point) {
+  // M is the amount of y differences on 1 x.
+  // 1 | new M   3  9
+  // M | 1       4  12
+
+  var flipRatio = 0;
+
+  if (LineFormula.ratio == 0) {
+    //(ratio * x) + offset = y
+    //results in a formula that only returns a variable if an Y is provided.
+    //x = (y - offset) / ratio.
+  } else {
+    var flipRatio = 1 / LineForumla.ratio;
+    flipRatio = flipRatio * -1;
+
+  }
+
+  console.log("flipRatio = " + flipRatio);
+
+
+  //now to Calculate the required b
+  // y = mm * x + bb;
+  // bb = y - (mm * x)
+  var flipOffset = 0;
+  flipOffset = point.y - (flipRatio * point.x);
+  console.log("flipOffset = " + flipOffset);
+
+  return new LineFormula(flipRatio, flipOffset);
 }
 
 
@@ -81,25 +124,30 @@ canvas.width = canvas_width;
 canvas.height = canvas_height;
 document.body.appendChild(canvas);
 
-var points = [new Point(150, 150), new Point(300, 450)];
+var points = [new Point(250, 300), new Point(450, 300)];
 
 for (var point in points) {
-  points[point].draw(ctx);
+  points[point].draw(ctx, "black");
 }
 
 //to draw a line perpendicular to previous one we need a bit of algebra.
 //How do I define this line in a function.
 //It is always someting like this. sx + z = y;
-var currentLine = getLine(points[0], points[1]);
-currentLine.draw(ctx, points[0].x, points[1].x, "grey");
+var firstFormulaLine = getLineFormula(points[0], points[1]);
+// var firstDrawLine = new Line(points[0], points[1]);
+var firstDrawLine = new Line(new Point(points[0].x, firstFormulaLine.getY(points[0].x)), new Point(points[1].x, firstFormulaLine.getY(points[1].x)));
+firstDrawLine.draw(ctx, "grey");
 
 //draw a line perpendicular to the previous line. In the middle of the previous one.
 //Calculate that.
 var halfwayPoint = new Point(((points[1].x - points[0].x) / 2) + points[0].x , ((points[1].y - points[0].y) / 2) + points[0].y);
-// halfwayPoint.draw(ctx);
+halfwayPoint.draw(ctx, "blue");
 
 //This is now the border.:)
-var nextLine = flipLine(currentLine, halfwayPoint);
-nextLine.draw(ctx, 0, canvas_width, "red");
+var nextLine = flipLine(firstFormulaLine, halfwayPoint);
+console.log(nextLine);
+var nextDrawLine = new Line(new Point(0, nextLine.getY(0)), new Point(canvas_width, nextLine.getY(canvas_width)));
 
-//This all does some weird stuff when either of the differences between the points is zero. :P
+
+
+nextDrawLine.draw(ctx, "red");
