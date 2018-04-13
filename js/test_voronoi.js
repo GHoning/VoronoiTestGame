@@ -43,7 +43,11 @@ class LineFormula {
   }
 
   getX(y) {
-    return (y - this.offset) / this.ratio;
+    if (vertical) {
+      return this.offset;
+    } else {
+      return (y - this.offset) / this.ratio;
+    }
   }
 
   getY(x) {
@@ -63,14 +67,17 @@ function getLineFormula(p1, p2) {
 
   var ratio = difY / difX;
 
+  var horizontal = false;
+  var vertical = false;
+
   if (difX == 0) {
     ratio = 0;
-    //Vertical = true;
+    vertical = true;
   }
 
   if (difY == 0) {
     ratio = 0;
-    //Horizontal = true;
+    horizontal = true;
   }
 
   console.log("ratio = " + ratio);
@@ -80,37 +87,48 @@ function getLineFormula(p1, p2) {
 
   console.log("offset = "+ offset);
 
-  return new LineFormula(ratio, offset);
+  return new LineFormula(ratio, offset, horizontal, vertical);
 }
 
-function flipLine(LineForumla, point) {
+function flipLine(lineFormula, point) {
   // M is the amount of y differences on 1 x.
   // 1 | new M   3  9
   // M | 1       4  12
 
+  horizontal = false;
+  vertical = false;
+
+  if(lineFormula.horizontal) {
+    vertical = true;
+    flipOffset = point.x;
+    return new LineFormula(0, flipOffset, horizontal, vertical);
+  } else if (lineFormula.vertical) {
+    horizontal = true;
+  }
+
   var flipRatio = 0;
 
-  if (LineFormula.ratio == 0) {
+  if (lineFormula.ratio == 0) {
     //(ratio * x) + offset = y
     //results in a formula that only returns a variable if an Y is provided.
     //x = (y - offset) / ratio.
   } else {
-    var flipRatio = 1 / LineForumla.ratio;
+    var flipRatio = 1 / lineFormula.ratio;
     flipRatio = flipRatio * -1;
-
   }
 
   console.log("flipRatio = " + flipRatio);
 
-
   //now to Calculate the required b
   // y = mm * x + bb;
   // bb = y - (mm * x)
+
   var flipOffset = 0;
   flipOffset = point.y - (flipRatio * point.x);
+
   console.log("flipOffset = " + flipOffset);
 
-  return new LineFormula(flipRatio, flipOffset);
+  return new LineFormula(flipRatio, flipOffset, horizontal, vertical);
 }
 
 
@@ -124,7 +142,7 @@ canvas.width = canvas_width;
 canvas.height = canvas_height;
 document.body.appendChild(canvas);
 
-var points = [new Point(250, 300), new Point(450, 300)];
+var points = [new Point(250, 250), new Point(250, 450)];
 
 for (var point in points) {
   points[point].draw(ctx, "black");
@@ -134,20 +152,35 @@ for (var point in points) {
 //How do I define this line in a function.
 //It is always someting like this. sx + z = y;
 var firstFormulaLine = getLineFormula(points[0], points[1]);
+console.log(firstFormulaLine);
 // var firstDrawLine = new Line(points[0], points[1]);
-var firstDrawLine = new Line(new Point(points[0].x, firstFormulaLine.getY(points[0].x)), new Point(points[1].x, firstFormulaLine.getY(points[1].x)));
+
+if(firstFormulaLine.vertical) {
+  var firstDrawLine = new Line(points[0], points[1]);
+} else {
+  var firstDrawLine = new Line(new Point(points[0].x, firstFormulaLine.getY(points[0].x)), new Point(points[1].x, firstFormulaLine.getY(points[1].x)));
+}
+
+console.log(firstDrawLine);
 firstDrawLine.draw(ctx, "grey");
 
 //draw a line perpendicular to the previous line. In the middle of the previous one.
 //Calculate that.
 var halfwayPoint = new Point(((points[1].x - points[0].x) / 2) + points[0].x , ((points[1].y - points[0].y) / 2) + points[0].y);
+console.log(halfwayPoint);
 halfwayPoint.draw(ctx, "blue");
 
 //This is now the border.:)
 var nextLine = flipLine(firstFormulaLine, halfwayPoint);
 console.log(nextLine);
-var nextDrawLine = new Line(new Point(0, nextLine.getY(0)), new Point(canvas_width, nextLine.getY(canvas_width)));
 
-
-
+if(nextLine.vertical) {
+  var nextDrawLine = new Line(new Point(nextLine.getX(0), 0), new Point(nextLine.getX(canvas_height), canvas_height));
+} else {
+  var nextDrawLine = new Line(new Point(0, nextLine.getY(0)), new Point(canvas_width, nextLine.getY(canvas_width)));
+}
+console.log(nextDrawLine);
 nextDrawLine.draw(ctx, "red");
+
+//Next should be testing it on more points. So I can start calculating the borders of the area's.
+//After that I can do some other stuff :)
