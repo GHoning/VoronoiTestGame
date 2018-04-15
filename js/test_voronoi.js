@@ -62,8 +62,8 @@ function getLineFormula(p1, p2) {
   var difX = p1.x - p2.x;
   var difY = p1.y - p2.y;
 
-  console.log("difx = " + difX);
-  console.log("dify = " + difY);
+  // console.log("difx = " + difX);
+  // console.log("dify = " + difY);
 
   var ratio = difY / difX;
 
@@ -80,12 +80,12 @@ function getLineFormula(p1, p2) {
     horizontal = true;
   }
 
-  console.log("ratio = " + ratio);
+  // console.log("ratio = " + ratio);
 
   var tempLine = new LineFormula(ratio, 0);
   var offset = p1.y - tempLine.getY(p1.x);
 
-  console.log("offset = "+ offset);
+  // console.log("offset = "+ offset);
 
   return new LineFormula(ratio, offset, horizontal, vertical);
 }
@@ -117,7 +117,7 @@ function flipLine(lineFormula, point) {
     flipRatio = flipRatio * -1;
   }
 
-  console.log("flipRatio = " + flipRatio);
+  // console.log("flipRatio = " + flipRatio);
 
   //now to Calculate the required b
   // y = mm * x + bb;
@@ -126,11 +126,35 @@ function flipLine(lineFormula, point) {
   var flipOffset = 0;
   flipOffset = point.y - (flipRatio * point.x);
 
-  console.log("flipOffset = " + flipOffset);
+  // console.log("flipOffset = " + flipOffset);
 
   return new LineFormula(flipRatio, flipOffset, horizontal, vertical);
 }
 
+function generate_points () {
+  //Create an arry of random points on the plane.
+  var points = []
+
+  for (i = 0; i < 5; i++) {
+    //make the screen size a variable
+    points.push(new Point(Math.floor(Math.random() * canvas_width + 1), Math.floor(Math.random() * canvas_height + 1)))
+  }
+
+  return points;
+}
+
+//sort the array of points based on their X co-ordinate.
+function compare(a, b) {
+  if (a.x < b.x) {
+    return -1;
+  }
+
+  if (a.x > b.x) {
+    return 1;
+  }
+
+  return 0;
+}
 
 // Create the canvas
 var canvas = document.createElement("canvas");
@@ -142,45 +166,67 @@ canvas.width = canvas_width;
 canvas.height = canvas_height;
 document.body.appendChild(canvas);
 
-var points = [new Point(250, 250), new Point(250, 450)];
+//Now form here see if I can't generate the points.
 
-for (var point in points) {
-  points[point].draw(ctx, "black");
+var points = generate_points();
+
+var borders = [];
+
+for (p in points) {
+  points[p].draw(ctx, "black");
 }
+
+console.log(points);
+
+//Sort the points based on their X.
+points.sort(compare);
+
+for (p = 0; p < 5; p++) {
+  console.log(points[p+1]);
+  if (points[p+1] != null) {
+    var firstFormulaLine = getLineFormula(points[p], points[p+1]);
+    // console.log(firstFormulaLine);
+    // var firstDrawLine = new Line(points[0], points[1]);
+
+    if(firstFormulaLine.vertical) {
+      var firstDrawLine = new Line(points[p], points[p+1]);
+    } else {
+      var firstDrawLine = new Line(new Point(points[p].x, firstFormulaLine.getY(points[p].x)), new Point(points[p+1].x, firstFormulaLine.getY(points[p+1].x)));
+    }
+
+    //console.log(firstDrawLine);
+    firstDrawLine.draw(ctx, "grey");
+
+    //draw a line perpendicular to the previous line. In the middle of the previous one.
+    //Calculate that.
+    var halfwayPoint = new Point(((points[p+1].x - points[p].x) / 2) + points[p].x , ((points[p+1].y - points[p].y) / 2) + points[p].y);
+    //console.log(halfwayPoint);
+    halfwayPoint.draw(ctx, "blue");
+
+    //This is now the border.:)
+    var nextLine = flipLine(firstFormulaLine, halfwayPoint);
+    //console.log(nextLine);
+
+    if(nextLine.vertical) {
+      var nextDrawLine = new Line(new Point(nextLine.getX(0), 0), new Point(nextLine.getX(canvas_height), canvas_height));
+    } else {
+      var nextDrawLine = new Line(new Point(0, nextLine.getY(0)), new Point(canvas_width, nextLine.getY(canvas_width)));
+    }
+    //console.log(nextDrawLine);
+    nextDrawLine.draw(ctx, "red");
+
+    //check if the nextDrawLine has a cutting point with another line.
+    borders.push(nextLine);
+
+  }
+}
+
+console.log(borders);
+
 
 //to draw a line perpendicular to previous one we need a bit of algebra.
 //How do I define this line in a function.
 //It is always someting like this. sx + z = y;
-var firstFormulaLine = getLineFormula(points[0], points[1]);
-console.log(firstFormulaLine);
-// var firstDrawLine = new Line(points[0], points[1]);
-
-if(firstFormulaLine.vertical) {
-  var firstDrawLine = new Line(points[0], points[1]);
-} else {
-  var firstDrawLine = new Line(new Point(points[0].x, firstFormulaLine.getY(points[0].x)), new Point(points[1].x, firstFormulaLine.getY(points[1].x)));
-}
-
-console.log(firstDrawLine);
-firstDrawLine.draw(ctx, "grey");
-
-//draw a line perpendicular to the previous line. In the middle of the previous one.
-//Calculate that.
-var halfwayPoint = new Point(((points[1].x - points[0].x) / 2) + points[0].x , ((points[1].y - points[0].y) / 2) + points[0].y);
-console.log(halfwayPoint);
-halfwayPoint.draw(ctx, "blue");
-
-//This is now the border.:)
-var nextLine = flipLine(firstFormulaLine, halfwayPoint);
-console.log(nextLine);
-
-if(nextLine.vertical) {
-  var nextDrawLine = new Line(new Point(nextLine.getX(0), 0), new Point(nextLine.getX(canvas_height), canvas_height));
-} else {
-  var nextDrawLine = new Line(new Point(0, nextLine.getY(0)), new Point(canvas_width, nextLine.getY(canvas_width)));
-}
-console.log(nextDrawLine);
-nextDrawLine.draw(ctx, "red");
 
 //Next should be testing it on more points. So I can start calculating the borders of the area's.
 //After that I can do some other stuff :)
