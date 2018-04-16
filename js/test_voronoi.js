@@ -135,7 +135,7 @@ function generate_points () {
   //Create an arry of random points on the plane.
   var points = []
 
-  for (i = 0; i < 5; i++) {
+  for (i = 0; i < 4; i++) {
     //make the screen size a variable
     points.push(new Point(Math.floor(Math.random() * canvas_width + 1), Math.floor(Math.random() * canvas_height + 1)))
   }
@@ -154,6 +154,43 @@ function compare(a, b) {
   }
 
   return 0;
+}
+
+function getCrossPoint(l1, l2) {
+  // A situation that both lineFormula
+  // x1 = x2
+  // y1 = y2
+  // 4x + 200 = 3x + 600
+  // 4x = 3x + 400
+  // (4x -3x) x = 400
+  // 12x - 1200 = -6x +400
+  // 12x = -6x  + 1600
+  // 18x = 1600
+  // x = 1600 / 18;
+  // l1.ratio * x + l1.offset = l2.ratio * x + l2.offset.
+  // l1.ratio * x = l2.ratio * x + l2.offset - l1.offset.
+  // x = (l2.ratio - l1.ratio) + (l2.offset - l1.offset)
+  //This just isn't accurate enough.
+  //So either keep going. I will have to do a ton of other checks. Which might not be as nice as some of the algorithms I found.
+  //
+
+  console.log("l1 = ", l1);
+  console.log("l2 = ", l2);
+
+  r = l2.ratio * -1;
+  ratio =  l1.ratio + r;
+  offset = (l2.offset - l1.offset) / ratio;
+
+  console.log("ratio = " + ratio);
+  console.log("offset = " + offset);
+
+  x = ratio + offset;
+  y = l1.getY(x);
+
+  console.log(x);
+  console.log(y);
+
+  return new Point(x, y);
 }
 
 // Create the canvas
@@ -181,7 +218,7 @@ console.log(points);
 //Sort the points based on their X.
 points.sort(compare);
 
-for (p = 0; p < 5; p++) {
+for (p = 0; p < 4; p++) {
   console.log(points[p+1]);
   if (points[p+1] != null) {
     var firstFormulaLine = getLineFormula(points[p], points[p+1]);
@@ -215,18 +252,21 @@ for (p = 0; p < 5; p++) {
     //console.log(nextDrawLine);
     nextDrawLine.draw(ctx, "red");
 
+
+    if(borders.length > 1) {
+      console.log("start borders")
+      for (b = 0; b < borders.length-1; b++) {
+        console.log(b);
+        if (borders[b + 1]) {
+          point = getCrossPoint(borders[b], nextLine)
+          point.draw(ctx, "red")
+        }
+      }
+    }
+
     //check if the nextDrawLine has a cutting point with another line.
     borders.push(nextLine);
-
   }
 }
 
 console.log(borders);
-
-
-//to draw a line perpendicular to previous one we need a bit of algebra.
-//How do I define this line in a function.
-//It is always someting like this. sx + z = y;
-
-//Next should be testing it on more points. So I can start calculating the borders of the area's.
-//After that I can do some other stuff :)
