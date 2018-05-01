@@ -63,6 +63,28 @@ class CircleEvent {
   //Which means the distance between that point is equal.
 }
 
+class Node {
+   constructor(left, right) {
+     this.left = left;
+     this.right = right;
+   }
+
+   getLeft() {
+     return this.left;
+   }
+
+   setLeft(left) {
+     this.left = left;
+   }
+
+   getRight() {
+     return this.right;
+   }
+
+   setRight() {
+     this.right = right;
+   }
+}
 
 
 //Functions
@@ -87,6 +109,8 @@ function draw(ctx) {
 
   //draw the sweepline.
   sweepline.draw(ctx, "grey");
+
+  testQuadretic(ctx, "");
 }
 
 function compare_x(a, b) {
@@ -105,6 +129,37 @@ function compare_y(a, b) {
   return 0;
 }
 
+function checkInput(e) {
+  var code = e.keyCode;
+  if (code == 40) {
+    //handle the next event or something.
+    handleNextEvent();
+  }
+}
+
+function handleNextEvent() {
+  currentPoint = points[i]
+  sweepline.moveDown(currentPoint.y);
+  i++;
+
+  draw(ctx);
+}
+
+function testQuadretic(ctx) {
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = "#333";
+  ctx.beginPath();
+  ctx.moveTo(370, 344);
+  ctx.quadraticCurveTo(397, 4, 204, 211);
+  ctx.stroke();
+
+
+  start = new Point(370, 344);
+  start.draw(ctx, "red");
+  end = new Point(204, 211);
+  end.draw(ctx, "blue");
+}
+
 //Main or start
 // Create the canvas
 var canvas = document.createElement("canvas");
@@ -116,12 +171,17 @@ canvas.width = canvas_width;
 canvas.height = canvas_height;
 document.body.appendChild(canvas);
 
-var points = generate_points();
+document.addEventListener("keyup", checkInput, false);
 
+var points = generate_points();
+points.sort(compare_y);
 
 //form here implement the fortune stuff.
 var sweepline = new Sweepline(new Point(0 ,0), new Point(canvas_width ,0));
-draw(ctx);
+
+//vars used to loop over the points on a keypress.
+var i = 0;
+var currentPoint = points[i];
 
 // setTimeout(function(){
 //     //do what you need here
@@ -131,9 +191,7 @@ draw(ctx);
 
 console.log(points);
 
-//sort the array of points on the x and y axis.
-// points.sort(compare_x);
-// points.sort(compare_y);
-
 //This is a collection of arc's and intersections.
-var beachline = [];
+// var beachline = [];
+
+draw(ctx);
